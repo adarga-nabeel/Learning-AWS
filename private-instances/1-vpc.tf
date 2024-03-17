@@ -19,7 +19,7 @@ resource "aws_internet_gateway" "my_igw" {
   }
 }
 
-# Associated Public Subnets
+# Public Subnets
 
 resource "aws_subnet" "my_public_subnet_1" {
   vpc_id                  = aws_vpc.my_vpc.id
@@ -43,7 +43,7 @@ resource "aws_subnet" "my_public_subnet_2" {
   }
 }
 
-# Associated Public Subnets
+# Private Subnets
 
 resource "aws_subnet" "my_private_subnet_1" {
   vpc_id            = aws_vpc.my_vpc.id
