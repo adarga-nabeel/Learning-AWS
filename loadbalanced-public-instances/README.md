@@ -1,0 +1,1 @@
+This is an example of creating a public load balancer, balancing public instances/servers
