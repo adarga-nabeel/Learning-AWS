@@ -1,0 +1,1 @@
+Boot strap Elastic Bolk Storage (EBS) to an EC2 instance

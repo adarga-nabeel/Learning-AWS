@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Update all packages
+sudo dnf update -y
+
+# Create /data directory
+sudo mkdir /efsdemo
+
+# Install amazon efs-util package - allows working with EFS filesystems
+sudo dnf -y install amazon-efs-utils
+
+# Mount blockstorage to newly created /data directory
+sudo mount.efs ${efs_id} /efsdemo
+
+sudo echo "This is from ${server_name}" >> /efsdemo/${server_name}
+
+# sudo echo "This is from ${efs_id}" >> /efsdemo/${efs_id}
+
+##########################################################################################
+# To ensure EBS Volume is always mounted if server get rebooted, we must do the following:
+##########################################################################################

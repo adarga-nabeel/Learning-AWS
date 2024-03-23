@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Update all packages
+sudo yum update -y
+
+sudo yum install xfsprogs -y
+
+# Create file system xfs on blockstorage /dev/xvdh
+sudo mkfs -t xfs /dev/xvdh
+
+# Check filesystem
+sudo file -s /dev/xvdb
+
+# Create /data directory
+sudo mkdir /data
+
+# Mount blockstorage to newly created /data directory
+sudo mount /dev/xvdh /data
+
+# Verify mounting
+df -k && lsblk
+
+##########################################################################################
+# To ensure EBS Volume is always mounted if server get rebooted, we must do the following:
+##########################################################################################
+
+# Extract the blockstrage UUID
+BLK_ID=$(sudo blkid /dev/xvdh| cut -f2 -d" ")
+
+# Verify blockstorage UUID is successfully extracted
+if [[ -z $BLK_ID ]]; then
+  echo "Hmm ... no block ID found ... "
+  exit 1
+fi
+
+# Configure the new blockstorage file system in fstab to ensure it exists even after
+# server reboot
+echo "$BLK_ID     /data   xfs    defaults   0   2" | sudo tee --append /etc/fstab
+
+# Ensure all filesystems in /etc/fstab are mounted
+sudo mount -a
+
+# Write to /data directory to verify it's saving blockstorage is saving the data
+sudo echo "Bootstrapping Complete in ${server_name}!" | sudo tee  /data/bootstrap.txt
+
+# Confirmation message
+echo "Bootstrapping Complete!" 
