@@ -7,7 +7,7 @@ resource "random_string" "bucket_name" {
 }
 
 resource "aws_s3_bucket" "main" {
-  bucket = "pre-signed-url-${random_string.bucket_name.result}"
+  bucket = "my-bucket-${random_string.bucket_name.result}"
 
   tags = {
     Name        = "My bucket"
@@ -43,8 +43,10 @@ resource "aws_s3_bucket_policy" "allow_public_access" {
 data "aws_caller_identity" "account_id" {}
 
 data "aws_iam_policy_document" "allow_public_access" {
+
+  # Create Bucket (resource) policy which will policy controls to delegate AccessPoints 
   statement {
-    sid = "PublicBucket"
+    sid = "DelegateAccessPoint"
 
     principals {
       type        = "AWS"
@@ -53,11 +55,20 @@ data "aws_iam_policy_document" "allow_public_access" {
 
     effect = "Allow"
 
-    actions = ["s3:GetObject"]
+    actions = [
+      "*"
+    ]
 
     resources = [
+      "${aws_s3_bucket.main.arn}",
       "${aws_s3_bucket.main.arn}/*"
     ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "s3:DataAccessPointAccount"
+      values   = [data.aws_caller_identity.account_id.account_id]
+    }
   }
 }
 
@@ -69,25 +80,3 @@ resource "aws_s3_object" "object" {
 
   etag = filemd5("./simple.html")
 }
-
-
-##### PRE-SIGNED URL
-
-# Needs to SDK - python or CLI
-
-# resource "null_resource" "url" {
-#   provisioner "local-exec" {
-#     command = "aws s3 presign s3://${aws_s3_bucket.main.id}/${aws_s3_object.object.key} >> url"
-#   }
-# }
-
-# data "local_file" "url" {
-#   depends_on = [
-#     null_resource.url
-#   ]
-#   filename = "${path.module}/url"
-# }
-
-# output "url" {
-#   value = data.local_file.url.content
-# }
