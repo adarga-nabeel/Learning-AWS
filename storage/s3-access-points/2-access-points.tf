@@ -29,11 +29,14 @@ data "aws_iam_policy_document" "developer_access_point_policy" {
 
     actions = [
       "s3:GetObject",
-      "s3:PutObject"
+      "s3:PutObject",
+      "s3:ListBucket"
     ]
 
+    # Allow all users with this access point
     resources = [
-      "arn:aws:s3:${data.aws_region.current.name}:${data.aws_caller_identity.account_id.account_id}:accesspoint/${aws_s3_access_point.main.name}/object/cloud_user/*",
+      "arn:aws:s3:${data.aws_region.current.name}:${data.aws_caller_identity.account_id.account_id}:accesspoint/${aws_s3_access_point.main.name}/object/*",
+      "arn:aws:s3:${data.aws_region.current.name}:${data.aws_caller_identity.account_id.account_id}:accesspoint/${aws_s3_access_point.main.name}"
     ]
   }
 }
