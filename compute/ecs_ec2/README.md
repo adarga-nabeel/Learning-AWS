@@ -13,3 +13,5 @@
 
 
 For more information, please visit: https://spacelift.io/blog/terraform-ecs
+
+For module, please visit: https://registry.terraform.io/modules/terraform-aws-modules/ecs/aws/latest
