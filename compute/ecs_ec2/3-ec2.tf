@@ -1,4 +1,4 @@
-# Step 1: Create an EC2 launch template
+# Step 0: Create the ecsInstanceRole
 resource "aws_iam_role" "ecsInstanceRole" {
     name = "ecsInstanceRole"
     assume_role_policy = <<EOF
@@ -29,6 +29,7 @@ resource "aws_iam_instance_profile" "ecs_instance_profile" {
   role = aws_iam_role.ecsInstanceRole.name
 }
 
+# Step 1: Create an EC2 launch template
 resource "aws_launch_template" "main" {
  name_prefix   = "ecs-template"
  image_id      = "ami-0d7a109bf30624c99" # AMI in US East (Virginia) region

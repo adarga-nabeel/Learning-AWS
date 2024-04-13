@@ -1,3 +1,28 @@
+# Step 0: Create the ecsTaskExecutionRole
+resource "aws_iam_role" "ecsTaskExecutionRole" {
+    name = "ecsTaskExecutionRole"
+    assume_role_policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "ecs-tasks.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "ecsInstanceRole" {
+    role = "${aws_iam_role.ecsInstanceRole.name}"
+    policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
 # Step 1: Create and push the application image
 ## We would deploy the application “docker/getting-started”, which is usually shipped with every Docker desktop installation
 
@@ -34,13 +59,13 @@ resource "aws_ecs_cluster_capacity_providers" "example" {
  }
 }
 
-data "aws_caller_identity" "target_vpc_account" {}
+data "aws_caller_identity" "local_account_id" {}
 
 # Step 4: Create ECS task definition with Terraform
 resource "aws_ecs_task_definition" "ecs_task_definition" {
  family             = "my-ecs-task"
  network_mode       = "awsvpc"
- execution_role_arn = "arn:aws:iam::${data.aws_caller_identity.target_vpc_account.account_id}:role/ecsTaskExecutionRole"
+ execution_role_arn = aws_iam_role.ecsTaskExecutionRole.arn #"arn:aws:iam::${data.aws_caller_identity.local_account_id.account_id}:role/ecsTaskExecutionRole"
  cpu                = 256
  runtime_platform {
    operating_system_family = "LINUX"
