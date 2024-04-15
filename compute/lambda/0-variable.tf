@@ -1,6 +1,6 @@
 variable "name" {
   description = "Project name"
-  default = "ecr-project"
+  default = "lambda-project"
   type = string
 }
 
