@@ -32,6 +32,17 @@ resource "aws_subnet" "public_subnet_1" {
   }
 }
 
+resource "aws_subnet" "public_subnet_2" {
+  vpc_id                  = aws_vpc.my_vpc.id
+  cidr_block              = "10.0.2.0/24"
+  map_public_ip_on_launch = true
+  availability_zone       = "${var.region}b"
+
+  tags = {
+    Name = "${var.name}_public_subnet"
+  }
+}
+
 # Create Public Route Table pointing to the IGW
 
 resource "aws_route_table" "public_route_table" {
@@ -51,5 +62,11 @@ resource "aws_route_table" "public_route_table" {
 
 resource "aws_route_table_association" "public_rta" {
   subnet_id      = aws_subnet.public_subnet_1.id
+  route_table_id = aws_route_table.public_route_table.id
+}
+
+
+resource "aws_route_table_association" "public_rtb" {
+  subnet_id      = aws_subnet.public_subnet_2.id
   route_table_id = aws_route_table.public_route_table.id
 }
