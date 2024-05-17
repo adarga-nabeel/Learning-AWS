@@ -1,8 +1,8 @@
 import json
 
 def lambda_handler(event, context):
-    cars = [{"model": "accord", "make": "honda", "colour": "blue"}, {"model": "prius", "make": "toyota", "colour": "silver"}]
+    cloud_bucket_names = [{"cloud_provider": "aws", "bucket": "s3"}, {"cloud_provider": "azure", "bucket": "blob"}]
     return {
         'statusCode': 200,
-        'body': json.dumps(cars)
+        'body': json.dumps(cloud_bucket_names)
     }

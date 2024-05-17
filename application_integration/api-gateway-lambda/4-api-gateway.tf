@@ -2,8 +2,8 @@
 # Create the API Gateway
 #########################################################################################################
 resource "aws_api_gateway_rest_api" "api_gateway" {
-  name = "cars-api"
-  description = "Cars API Gateway"
+  name = var.name
+  description = "${var.name} API Gateway"
 
   endpoint_configuration {
     types = ["REGIONAL"]
@@ -18,7 +18,7 @@ resource "aws_api_gateway_resource" "api_gateway_resource" {
   rest_api_id = aws_api_gateway_rest_api.api_gateway.id
   parent_id = aws_api_gateway_rest_api.api_gateway.root_resource_id
 
-  # “<URL>/cars"
+  # “<URL>/var.endpoint_path"
   path_part = var.endpoint_path
 }
 
@@ -26,7 +26,7 @@ resource "aws_api_gateway_resource" "api_gateway_resource" {
 #########################################################################################################
 # Add API Gateway Request (calling) Method
 #########################################################################################################
-resource "aws_api_gateway_method" "proxy" {
+resource "aws_api_gateway_method" "gateway_method" {
   rest_api_id = aws_api_gateway_rest_api.api_gateway.id
   resource_id = aws_api_gateway_resource.api_gateway_resource.id
   http_method = "GET"
@@ -40,12 +40,13 @@ resource "aws_api_gateway_method" "proxy" {
 resource "aws_api_gateway_integration" "lambda_integration" {
   rest_api_id = aws_api_gateway_rest_api.api_gateway.id
   resource_id = aws_api_gateway_resource.api_gateway_resource.id
-  http_method = aws_api_gateway_method.proxy.http_method
+  http_method = aws_api_gateway_method.gateway_method.http_method
   integration_http_method = "POST"
 
   # Informs Lambda that the API request is from AWS
+  # AWS (for AWS services), AWS_PROXY (for Lambda proxy integration)
   type = "AWS_PROXY"
-  uri = aws_lambda_function.car_lambda.invoke_arn
+  uri = aws_lambda_function.storage_lambda.invoke_arn
 
 }
 
@@ -59,9 +60,9 @@ data "aws_region" "current" {}
 resource "aws_lambda_permission" "lambda_permission" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.car_lambda.function_name
+  function_name = aws_lambda_function.storage_lambda.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "arn:aws:execute-api:${data.aws_region.current.id}:${data.aws_caller_identity.account_info.account_id}:${aws_api_gateway_rest_api.api_gateway.id}/*/${aws_api_gateway_method.proxy.http_method}${aws_api_gateway_resource.api_gateway_resource.path}"
+  source_arn    = "arn:aws:execute-api:${data.aws_region.current.id}:${data.aws_caller_identity.account_info.account_id}:${aws_api_gateway_rest_api.api_gateway.id}/*/${aws_api_gateway_method.gateway_method.http_method}${aws_api_gateway_resource.api_gateway_resource.path}"
 }
 
 
@@ -71,13 +72,14 @@ resource "aws_lambda_permission" "lambda_permission" {
 resource "aws_api_gateway_deployment" "deploy_api_gateway" {
   rest_api_id = aws_api_gateway_rest_api.api_gateway.id
 
-  # triggers = {
-  #   redeployment = sha1(jsonencode(aws_api_gateway_rest_api.api_gateway.body))
-  # }
-
   lifecycle {
     create_before_destroy = true
   }
+
+  depends_on = [ 
+    aws_api_gateway_method.gateway_method,
+    aws_api_gateway_integration.lambda_integration
+    ]
 }
 
 #########################################################################################################
@@ -88,22 +90,3 @@ resource "aws_api_gateway_stage" "api_stage_env" {
   rest_api_id = aws_api_gateway_rest_api.api_gateway.id
   stage_name = "development"
 }
-
-# resource "aws_api_gateway_method_response" "proxy" {
-#   rest_api_id = aws_api_gateway_rest_api.api_gateway.id
-#   resource_id = aws_api_gateway_resource.api_gateway_resource.id
-#   http_method = aws_api_gateway_method.proxy.http_method
-#   status_code = "200"
-# }
-
-# resource "aws_api_gateway_integration_response" "proxy" {
-#   rest_api_id = aws_api_gateway_rest_api.api_gateway.id
-#   resource_id = aws_api_gateway_resource.api_gateway_resource.id
-#   http_method = aws_api_gateway_method.proxy.http_method
-#   status_code = aws_api_gateway_method_response.proxy.status_code
-
-#   depends_on = [
-#     aws_api_gateway_method.proxy,
-#     aws_api_gateway_integration.lambda_integration
-#   ]
-# }

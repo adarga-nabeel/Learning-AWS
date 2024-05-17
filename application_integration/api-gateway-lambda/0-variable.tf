@@ -1,7 +1,7 @@
 variable "name" {
   description = "Project name"
   type = string
-  default = "get-cars"
+  default = "api-gateway"
 }
 
 variable "region" {
@@ -13,5 +13,5 @@ variable "region" {
 variable "endpoint_path" {
   description = "endpoint path for the API Gateway"
   type = string
-  default = "cars"
+  default = "storage"
 }
